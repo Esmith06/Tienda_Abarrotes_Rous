@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ producto.nombre }} - Tienda de Abarrotes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        {% if producto.ruta_imagen %}
+        <img src="{{ url_for('static', filename=producto.ruta_imagen) }}" alt="{{ producto.nombre }}" class="img-fluid rounded shadow-sm">
+        {% else %}
+        <img src="{{ url_for('static', filename='img/default.png') }}" alt="{{ producto.nombre }}" class="img-fluid rounded shadow-sm">
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="mb-3">{{ producto.nombre }}</h2>
+        <p class="text-muted mb-3">{{ producto.descripcion }}</p>
+
+        {% if producto.categoria %}
+        <p><span class="badge bg-info">{{ producto.categoria }}</span></p>
+        {% endif %}
+
+        <h3 class="text-success mb-4">S/ {{ '%.2f'|format(producto.precio) }}</h3>
+
+        <div class="d-flex gap-2">
+            <!-- Si tu app tiene la ruta agregar_carrito la siguiente línea funcionará -->
+            <a href="{{ url_for('agregar_carrito', id_producto=producto.id) }}" class="btn btn-success btn-lg">Agregar al carrito</a>
+            <a href="{{ url_for('productos') }}" class="btn btn-outline-secondary btn-lg">Volver</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
