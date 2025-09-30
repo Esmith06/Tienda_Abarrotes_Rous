@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Administrar Productos{% endblock %}
+
+{% block content %}
+<h2>Administrar Productos</h2>
+
+<form method="POST" action="{{ url_for('agregar_producto') }}">
+    <input type="text" name="nombre" placeholder="Nombre producto" required>
+    <input type="text" name="descripcion" placeholder="Descripción">
+    <input type="number" name="precio" placeholder="Precio" step="0.01" required>
+    <input type="number" name="stock" placeholder="Stock" required>
+
+    <select name="id_categoria" required>
+        <option value="">-- Selecciona Categoría --</option>
+        {% for c in categorias %}
+        <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn">Agregar</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Producto</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Categoría</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in productos %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.descripcion }}</td>
+            <td>S/ {{ "%.2f"|format(p.precio) }}</td>
+            <td>{{ p.stock }}</td>
+            <td>{{ p.categoria }}</td>
+            <td><a href="{{ url_for('eliminar_producto', id=p.id) }}" class="btn danger">Eliminar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
