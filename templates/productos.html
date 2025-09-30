@@ -2,27 +2,43 @@
 {% block title %}Productos - Tienda de Abarrotes{% endblock %}
 
 {% block content %}
-<div class="productos-container">
-    <h2 class="titulo-seccion">🛒 Nuestros Productos</h2>
-    <div class="grid-productos">
+<h1 class="mb-4">Catálogo de Productos</h1>
+
+<div class="row g-4">
+    {% if productos %}
         {% for producto in productos %}
-        <div class="card-producto">
-            <div class="imagen-producto">
-                <!-- Aquí podrías cargar imágenes desde /static/img -->
-                <img src="{{ url_for('static', filename='img/default.png') }}" alt="{{ producto.nombre }}">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <!-- Imagen (usa ruta en producto.ruta_imagen si existe) -->
+                {% if producto.ruta_imagen %}
+                <img src="{{ url_for('static', filename=producto.ruta_imagen) }}" class="card-img-top" alt="{{ producto.nombre }}" style="height:220px; object-fit:cover;">
+                {% else %}
+                <img src="{{ url_for('static', filename='img/default.png') }}" class="card-img-top" alt="sin imagen" style="height:220px; object-fit:cover;">
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ producto.nombre }}</h5>
+                    <p class="card-text text-muted small mb-2">{{ producto.descripcion }}</p>
+                    {% if producto.categoria %}
+                    <span class="badge bg-info mb-2">{{ producto.categoria }}</span>
+                    {% endif %}
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-success">S/ {{ '%.2f'|format(producto.precio) }}</strong>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('producto_detalle', producto_id=producto.id) }}" class="btn btn-outline-success btn-sm">Ver</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="info-producto">
-                <h3>{{ producto.nombre }}</h3>
-                <p class="descripcion">{{ producto.descripcion }}</p>
-                <p class="categoria">Categoría: {{ producto.categoria }}</p>
-                <p class="precio">S/ {{ "%.2f"|format(producto.precio) }}</p>
-                <p class="stock">Stock: {{ producto.stock }}</p>
-            </div>
-            <form action="{{ url_for('agregar_carrito', id_producto=producto.id) }}" method="POST">
-                <button type="submit" class="btn-agregar">Agregar al carrito</button>
-            </form>
         </div>
         {% endfor %}
-    </div>
+    {% else %}
+        <div class="col-12">
+            <p class="text-center text-muted">No hay productos para mostrar.</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
+
