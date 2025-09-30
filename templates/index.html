@@ -1,6 +1,16 @@
 {% extends "base.html" %}
+
 {% block title %}Inicio{% endblock %}
+
 {% block content %}
-<h2>Bienvenido a la Tienda de Abarrotes</h2>
-<p>Compra fácil y rápido tus productos de primera necesidad.</p>
+<h2>Categorías</h2>
+<div class="grid">
+    {% for categoria in categorias %}
+    <div class="card">
+        <h3>{{ categoria.nombre }}</h3>
+        <p>{{ categoria.descripcion }}</p>
+        <a href="{{ url_for('productos', id_categoria=categoria.id) }}" class="btn">Ver productos</a>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
