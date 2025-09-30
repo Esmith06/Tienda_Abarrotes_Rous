@@ -6,7 +6,7 @@ import pyodbc
 # CONFIGURACIÓN DE LA APP
 # ============================
 app = Flask(__name__)
-app.secret_key = "clave_secreta_cambiar"  # Cambia esto por una clave segura
+app.secret_key = "clave_secreta_cambiar"  # 🔑 cambia esto por una clave segura
 
 # ============================
 # CONEXIÓN SQL SERVER
@@ -14,16 +14,16 @@ app.secret_key = "clave_secreta_cambiar"  # Cambia esto por una clave segura
 def get_db_connection():
     conn = pyodbc.connect(
         "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=localhost;"  # Cambia por tu servidor SQL
+        "SERVER=localhost;"   # Cambia por tu servidor SQL
         "DATABASE=TiendaAbarrotes;"
-        "UID=sa;"            # Usuario SQL Server
-        "PWD=tu_password;"   # Contraseña
+        "UID=sa;"             # Usuario SQL Server
+        "PWD=tu_password;"    # Contraseña
     )
     return conn
 
 
 # ============================
-# RUTAS
+# RUTAS PRINCIPALES
 # ============================
 
 @app.route("/")
@@ -98,8 +98,103 @@ def vaciar_carrito():
 
 
 # ============================
+# ADMIN - CATEGORÍAS
+# ============================
+
+@app.route("/admin/categorias")
+def admin_categorias():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre, descripcion, estado FROM Categorias;")
+    categorias = cursor.fetchall()
+    conn.close()
+    return render_template("admin_categorias.html", categorias=categorias)
+
+
+@app.route("/admin/categorias/agregar", methods=["POST"])
+def agregar_categoria():
+    nombre = request.form["nombre"]
+    descripcion = request.form["descripcion"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Categorias (nombre, descripcion) VALUES (?, ?)", (nombre, descripcion))
+    conn.commit()
+    conn.close()
+
+    flash("Categoría agregada con éxito", "success")
+    return redirect(url_for("admin_categorias"))
+
+
+@app.route("/admin/categorias/eliminar/<int:id>")
+def eliminar_categoria(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Categorias WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    flash("Categoría eliminada", "info")
+    return redirect(url_for("admin_categorias"))
+
+
+# ============================
+# ADMIN - PRODUCTOS
+# ============================
+
+@app.route("/admin/productos")
+def admin_productos():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT P.id, P.nombre, P.descripcion, P.precio, P.stock, C.nombre as categoria 
+        FROM Productos P
+        INNER JOIN Categorias C ON P.id_categoria = C.id
+    """)
+    productos = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM Categorias")
+    categorias = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_productos.html", productos=productos, categorias=categorias)
+
+
+@app.route("/admin/productos/agregar", methods=["POST"])
+def agregar_producto():
+    nombre = request.form["nombre"]
+    descripcion = request.form["descripcion"]
+    precio = request.form["precio"]
+    stock = request.form["stock"]
+    id_categoria = request.form["id_categoria"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO Productos (nombre, descripcion, precio, stock, id_categoria)
+        VALUES (?, ?, ?, ?, ?)
+    """, (nombre, descripcion, precio, stock, id_categoria))
+    conn.commit()
+    conn.close()
+
+    flash("Producto agregado con éxito", "success")
+    return redirect(url_for("admin_productos"))
+
+
+@app.route("/admin/productos/eliminar/<int:id>")
+def eliminar_producto(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Productos WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    flash("Producto eliminado", "info")
+    return redirect(url_for("admin_productos"))
+
+
+# ============================
 # INICIO
 # ============================
 if __name__ == "__main__":
     app.run(debug=True)
-
