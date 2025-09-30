@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Administrar Categorías{% endblock %}
+
+{% block content %}
+<h2>Administrar Categorías</h2>
+
+<form method="POST" action="{{ url_for('agregar_categoria') }}">
+    <input type="text" name="nombre" placeholder="Nombre categoría" required>
+    <input type="text" name="descripcion" placeholder="Descripción">
+    <button type="submit" class="btn">Agregar</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in categorias %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.descripcion }}</td>
+            <td>{{ 'Activo' if c.estado == 1 else 'Inactivo' }}</td>
+            <td><a href="{{ url_for('eliminar_categoria', id=c.id) }}" class="btn danger">Eliminar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
