@@ -1,200 +1,102 @@
+# app.py
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
+from dotenv import load_dotenv
 import pyodbc
 
-# ============================
-# CONFIGURACIÓN DE LA APP
-# ============================
+# ==============================
+# Configuración inicial
+# ==============================
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = "clave_secreta_cambiar"  # 🔑 cambia esto por una clave segura
+app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
 
-# ============================
-# CONEXIÓN SQL SERVER
-# ============================
+# ==============================
+# Conexión a SQL Server
+# ==============================
 def get_db_connection():
-    conn = pyodbc.connect(
-        "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=localhost;"   # Cambia por tu servidor SQL
-        "DATABASE=TiendaAbarrotes;"
-        "UID=sa;"             # Usuario SQL Server
-        "PWD=tu_password;"    # Contraseña
-    )
-    return conn
+    try:
+        conn = pyodbc.connect(
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={os.getenv('DB_SERVER')};"
+            f"DATABASE={os.getenv('DB_NAME')};"
+            f"UID={os.getenv('DB_USER')};"
+            f"PWD={os.getenv('DB_PASSWORD')}"
+        )
+        return conn
+    except Exception as e:
+        print(f"❌ Error al conectar con SQL Server: {e}")
+        return None
 
-
-# ============================
-# RUTAS PRINCIPALES
-# ============================
-
+# ==============================
+# Rutas principales
+# ==============================
 @app.route("/")
 def index():
-    """Página principal con categorías"""
+    """Página principal con categorías destacadas"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, descripcion FROM Categorias WHERE estado = 1;")
-    categorias = cursor.fetchall()
-    conn.close()
+    categorias = []
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT TOP 6 id, nombre, descripcion FROM Categorias")
+        categorias = cursor.fetchall()
+        conn.close()
     return render_template("index.html", categorias=categorias)
 
 
-@app.route("/productos/<int:id_categoria>")
-def productos(id_categoria):
-    """Lista de productos por categoría"""
+@app.route("/productos")
+def productos():
+    """Listado de productos"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT nombre FROM Categorias WHERE id = ?", (id_categoria,))
-    categoria = cursor.fetchone()
-
-    cursor.execute("""
-        SELECT id, nombre, descripcion, precio, stock, ruta_imagen 
-        FROM Productos WHERE id_categoria = ? AND estado = 1;
-    """, (id_categoria,))
-    productos = cursor.fetchall()
-    conn.close()
-    return render_template("productos.html", productos=productos, categoria=categoria)
-
-
-@app.route("/carrito")
-def carrito():
-    """Carrito de compras (datos en sesión)"""
-    if "carrito" not in session:
-        session["carrito"] = []
-    return render_template("carrito.html", carrito=session["carrito"])
+    productos = []
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT p.id, p.nombre, p.descripcion, p.precio, c.nombre as categoria
+            FROM Productos p
+            INNER JOIN Categorias c ON p.categoria_id = c.id
+        """)
+        productos = cursor.fetchall()
+        conn.close()
+    return render_template("productos.html", productos=productos)
 
 
-@app.route("/agregar_carrito/<int:id_producto>")
-def agregar_carrito(id_producto):
-    """Agregar producto al carrito"""
+@app.route("/producto/<int:producto_id>")
+def producto_detalle(producto_id):
+    """Detalle de un producto"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, precio FROM Productos WHERE id = ?", (id_producto,))
-    producto = cursor.fetchone()
-    conn.close()
-
+    producto = None
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT p.id, p.nombre, p.descripcion, p.precio, c.nombre as categoria
+            FROM Productos p
+            INNER JOIN Categorias c ON p.categoria_id = c.id
+            WHERE p.id = ?
+        """, (producto_id,))
+        producto = cursor.fetchone()
+        conn.close()
     if not producto:
-        flash("Producto no encontrado", "error")
-        return redirect(url_for("index"))
-
-    if "carrito" not in session:
-        session["carrito"] = []
-
-    session["carrito"].append({
-        "id": producto[0],
-        "nombre": producto[1],
-        "precio": float(producto[2]),
-        "cantidad": 1
-    })
-    session.modified = True
-    flash(f"{producto[1]} agregado al carrito", "success")
-    return redirect(request.referrer or url_for("index"))
+        flash("El producto no existe", "error")
+        return redirect(url_for("productos"))
+    return render_template("producto_detalle.html", producto=producto)
 
 
-@app.route("/vaciar_carrito")
-def vaciar_carrito():
-    """Vaciar carrito"""
-    session.pop("carrito", None)
-    flash("Carrito vaciado", "info")
-    return redirect(url_for("carrito"))
+@app.route("/contacto", methods=["GET", "POST"])
+def contacto():
+    """Página de contacto"""
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        email = request.form.get("email")
+        mensaje = request.form.get("mensaje")
+        flash("Gracias por tu mensaje. Te responderemos pronto.", "success")
+        return redirect(url_for("contacto"))
+    return render_template("contacto.html")
 
 
-# ============================
-# ADMIN - CATEGORÍAS
-# ============================
-
-@app.route("/admin/categorias")
-def admin_categorias():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, descripcion, estado FROM Categorias;")
-    categorias = cursor.fetchall()
-    conn.close()
-    return render_template("admin_categorias.html", categorias=categorias)
-
-
-@app.route("/admin/categorias/agregar", methods=["POST"])
-def agregar_categoria():
-    nombre = request.form["nombre"]
-    descripcion = request.form["descripcion"]
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO Categorias (nombre, descripcion) VALUES (?, ?)", (nombre, descripcion))
-    conn.commit()
-    conn.close()
-
-    flash("Categoría agregada con éxito", "success")
-    return redirect(url_for("admin_categorias"))
-
-
-@app.route("/admin/categorias/eliminar/<int:id>")
-def eliminar_categoria(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM Categorias WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-
-    flash("Categoría eliminada", "info")
-    return redirect(url_for("admin_categorias"))
-
-
-# ============================
-# ADMIN - PRODUCTOS
-# ============================
-
-@app.route("/admin/productos")
-def admin_productos():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT P.id, P.nombre, P.descripcion, P.precio, P.stock, C.nombre as categoria 
-        FROM Productos P
-        INNER JOIN Categorias C ON P.id_categoria = C.id
-    """)
-    productos = cursor.fetchall()
-
-    cursor.execute("SELECT id, nombre FROM Categorias")
-    categorias = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin_productos.html", productos=productos, categorias=categorias)
-
-
-@app.route("/admin/productos/agregar", methods=["POST"])
-def agregar_producto():
-    nombre = request.form["nombre"]
-    descripcion = request.form["descripcion"]
-    precio = request.form["precio"]
-    stock = request.form["stock"]
-    id_categoria = request.form["id_categoria"]
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO Productos (nombre, descripcion, precio, stock, id_categoria)
-        VALUES (?, ?, ?, ?, ?)
-    """, (nombre, descripcion, precio, stock, id_categoria))
-    conn.commit()
-    conn.close()
-
-    flash("Producto agregado con éxito", "success")
-    return redirect(url_for("admin_productos"))
-
-
-@app.route("/admin/productos/eliminar/<int:id>")
-def eliminar_producto(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM Productos WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-
-    flash("Producto eliminado", "info")
-    return redirect(url_for("admin_productos"))
-
-
-# ============================
-# INICIO
-# ============================
+# ==============================
+# Punto de entrada
+# ==============================
 if __name__ == "__main__":
     app.run(debug=True)
