@@ -1,16 +1,49 @@
 {% extends "base.html" %}
-
-{% block title %}Inicio{% endblock %}
+{% block title %}Inicio - Tienda de Abarrotes{% endblock %}
 
 {% block content %}
-<h2>Categorías</h2>
-<div class="grid">
-    {% for categoria in categorias %}
-    <div class="card">
-        <h3>{{ categoria.nombre }}</h3>
-        <p>{{ categoria.descripcion }}</p>
-        <a href="{{ url_for('productos', id_categoria=categoria.id) }}" class="btn">Ver productos</a>
+<div class="hero">
+    <div class="hero-text">
+        <h1>Bienvenido a <span>Tienda Rous</span> 🛒</h1>
+        <p>Encuentra todo lo que necesitas para tu hogar con la mejor calidad y precio.</p>
+        <a href="{{ url_for('productos') }}" class="btn-principal">Ver productos</a>
     </div>
-    {% endfor %}
+    <div class="hero-img">
+        <img src="{{ url_for('static', filename='img/market.png') }}" alt="Tienda de abarrotes">
+    </div>
 </div>
+
+<section class="categorias">
+    <h2>Categorías destacadas</h2>
+    <div class="grid-categorias">
+        <div class="card-cat">🥛 Lácteos</div>
+        <div class="card-cat">🍚 Granos</div>
+        <div class="card-cat">🍝 Pastas</div>
+        <div class="card-cat">🍬 Endulzantes</div>
+        <div class="card-cat">🥫 Conservas</div>
+    </div>
+</section>
+
+<section class="populares">
+    <h2>Productos más populares</h2>
+    <div class="grid-productos">
+        {% for producto in productos[:3] %}
+        <div class="card-producto">
+            <div class="imagen-producto">
+                <img src="{{ url_for('static', filename='img/default.png') }}" alt="{{ producto.nombre }}">
+            </div>
+            <div class="info-producto">
+                <h3>{{ producto.nombre }}</h3>
+                <p class="precio">S/ {{ "%.2f"|format(producto.precio) }}</p>
+            </div>
+            <form action="{{ url_for('agregar_carrito', id_producto=producto.id) }}" method="POST">
+                <button type="submit" class="btn-agregar">Agregar al carrito</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="ver-tienda">
+        <a href="{{ url_for('productos') }}" class="btn-principal">Ver toda la tienda</a>
+    </div>
+</section>
 {% endblock %}
