@@ -2,48 +2,47 @@
 {% block title %}Inicio - Tienda de Abarrotes{% endblock %}
 
 {% block content %}
-<div class="hero">
-    <div class="hero-text">
-        <h1>Bienvenido a <span>Tienda Rous</span> 🛒</h1>
-        <p>Encuentra todo lo que necesitas para tu hogar con la mejor calidad y precio.</p>
-        <a href="{{ url_for('productos') }}" class="btn-principal">Ver productos</a>
-    </div>
-    <div class="hero-img">
-        <img src="{{ url_for('static', filename='img/market.png') }}" alt="Tienda de abarrotes">
-    </div>
-</div>
-
-<section class="categorias">
-    <h2>Categorías destacadas</h2>
-    <div class="grid-categorias">
-        <div class="card-cat">🥛 Lácteos</div>
-        <div class="card-cat">🍚 Granos</div>
-        <div class="card-cat">🍝 Pastas</div>
-        <div class="card-cat">🍬 Endulzantes</div>
-        <div class="card-cat">🥫 Conservas</div>
+<!-- HERO -->
+<section class="p-4 p-md-5 mb-5 rounded-3 text-white" style="background: linear-gradient(135deg,#27ae60 0%,#2ecc71 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="display-5 fw-bold">Bienvenido a <span class="text-warning">Tienda Rous</span></h1>
+                <p class="lead">Productos de calidad para tu hogar. Explora nuestras categorías y encuentra ofertas diarias.</p>
+                <a href="{{ url_for('productos') }}" class="btn btn-warning btn-lg mt-3">Ver productos</a>
+            </div>
+            <div class="col-md-5 text-center d-none d-md-block">
+                <img src="{{ url_for('static', filename='img/market.png') }}" alt="Mercado" class="img-fluid" style="max-height:220px;">
+            </div>
+        </div>
     </div>
 </section>
 
-<section class="populares">
-    <h2>Productos más populares</h2>
-    <div class="grid-productos">
-        {% for producto in productos[:3] %}
-        <div class="card-producto">
-            <div class="imagen-producto">
-                <img src="{{ url_for('static', filename='img/default.png') }}" alt="{{ producto.nombre }}">
+<!-- CATEGORÍAS -->
+<section class="mb-5">
+    <h2 class="mb-4 text-center">Categorías</h2>
+    <div class="row g-4">
+        {% if categorias %}
+            {% for cat in categorias %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ cat.nombre }}</h5>
+                        {% if cat.descripcion %}
+                        <p class="card-text text-muted small mb-3">{{ cat.descripcion }}</p>
+                        {% endif %}
+                        <div class="mt-auto text-center">
+                            <a href="{{ url_for('productos') }}" class="btn btn-outline-success btn-sm">Explorar</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="info-producto">
-                <h3>{{ producto.nombre }}</h3>
-                <p class="precio">S/ {{ "%.2f"|format(producto.precio) }}</p>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <p class="text-center text-muted">No hay categorías disponibles.</p>
             </div>
-            <form action="{{ url_for('agregar_carrito', id_producto=producto.id) }}" method="POST">
-                <button type="submit" class="btn-agregar">Agregar al carrito</button>
-            </form>
-        </div>
-        {% endfor %}
-    </div>
-    <div class="ver-tienda">
-        <a href="{{ url_for('productos') }}" class="btn-principal">Ver toda la tienda</a>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
