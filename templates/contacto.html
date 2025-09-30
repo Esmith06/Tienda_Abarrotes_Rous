@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Contacto - Tienda de Abarrotes{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Contáctanos</h1>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <form method="POST" action="{{ url_for('contacto') }}" class="card shadow-sm p-4">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input id="nombre" name="nombre" type="text" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo electrónico</label>
+                <input id="email" name="email" type="email" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="mensaje" class="form-label">Mensaje</label>
+                <textarea id="mensaje" name="mensaje" rows="5" class="form-control" required></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success">Enviar mensaje</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
