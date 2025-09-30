@@ -1,48 +1,113 @@
 {% extends "base.html" %}
-{% block title %}Inicio - Tienda de Abarrotes{% endblock %}
+{% block title %}Inicio - Tienda Abarrotes{% endblock %}
 
 {% block content %}
 <!-- HERO -->
-<section class="p-4 p-md-5 mb-5 rounded-3 text-white" style="background: linear-gradient(135deg,#27ae60 0%,#2ecc71 100%);">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-7">
-                <h1 class="display-5 fw-bold">Bienvenido a <span class="text-warning">Tienda Rous</span></h1>
-                <p class="lead">Productos de calidad para tu hogar. Explora nuestras categorías y encuentra ofertas diarias.</p>
-                <a href="{{ url_for('productos') }}" class="btn btn-warning btn-lg mt-3">Ver productos</a>
-            </div>
-            <div class="col-md-5 text-center d-none d-md-block">
-                <img src="{{ url_for('static', filename='img/market.png') }}" alt="Mercado" class="img-fluid" style="max-height:220px;">
-            </div>
-        </div>
+<section class="hero py-5 mb-5">
+  <div class="hero-inner container">
+    <div class="hero-left">
+      <h1 class="hero-title">Bienvenido a <span class="brand">Tienda Rous</span> 🛒</h1>
+      <p class="hero-sub">
+        Productos frescos y artículos de uso diario con entrega rápida y precios competitivos.
+        Explora nuestras categorías y encuentra lo que necesitas para tu hogar.
+      </p>
+      <div class="hero-ctas">
+        <a href="{{ url_for('productos') }}" class="btn btn-primary btn-lg">Ver productos</a>
+        <a href="{{ url_for('contacto') }}" class="btn btn-outline-secondary btn-lg">Contáctanos</a>
+      </div>
     </div>
+    <div class="hero-right">
+      <img src="{{ url_for('static', filename='img/market.png') }}" alt="Tienda Rous" class="hero-image">
+    </div>
+  </div>
 </section>
 
-<!-- CATEGORÍAS -->
-<section class="mb-5">
-    <h2 class="mb-4 text-center">Categorías</h2>
-    <div class="row g-4">
-        {% if categorias %}
-            {% for cat in categorias %}
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ cat.nombre }}</h5>
-                        {% if cat.descripcion %}
-                        <p class="card-text text-muted small mb-3">{{ cat.descripcion }}</p>
-                        {% endif %}
-                        <div class="mt-auto text-center">
-                            <a href="{{ url_for('productos') }}" class="btn btn-outline-success btn-sm">Explorar</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-12">
-                <p class="text-center text-muted">No hay categorías disponibles.</p>
-            </div>
-        {% endif %}
+<!-- CATEGORÍAS DESTACADAS -->
+<section class="container mb-5">
+  <h2 class="section-title">Categorías destacadas</h2>
+  <p class="section-sub text-muted">Navega por nuestras categorías más populares.</p>
+
+  <div class="grid-categorias">
+    {% if categorias %}
+      {% for cat in categorias %}
+      <article class="card-cat">
+        <div class="card-cat-body">
+          <h3 class="cat-title">{{ cat.nombre }}</h3>
+          {% if cat.descripcion %}
+            <p class="cat-desc">{{ cat.descripcion }}</p>
+          {% endif %}
+          <!-- Enlaza a la vista por categoría (ruta: productos por categoría) -->
+          <a href="{{ url_for('productos_categoria', categoria_id=cat.id) }}" class="btn btn-outline-success btn-sm">Explorar</a>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted w-100">No hay categorías disponibles por el momento.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- PRODUCTOS POPULARES -->
+<section class="container mb-5">
+  <h2 class="section-title">Productos populares</h2>
+  <p class="section-sub text-muted">Algunos de nuestros productos más demandados.</p>
+
+  <div class="grid-productos">
+    {% if productos %}
+      {% for producto in productos[:6] %}
+      <div class="card-producto">
+        <div class="imagen-producto">
+          {% if producto.ruta_imagen %}
+            <img src="{{ url_for('static', filename=producto.ruta_imagen) }}" alt="{{ producto.nombre }}">
+          {% else %}
+            <img src="{{ url_for('static', filename='img/default.png') }}" alt="Imagen no disponible">
+          {% endif %}
+        </div>
+
+        <div class="info-producto">
+          <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+          <p class="producto-desc text-muted">{{ producto.descripcion }}</p>
+          <div class="producto-meta">
+            {% if producto.categoria %}
+              <span class="badge badge-cat">{{ producto.categoria }}</span>
+            {% endif %}
+            <span class="precio">S/ {{ '%.2f'|format(producto.precio) }}</span>
+          </div>
+        </div>
+
+        <div class="producto-acciones">
+          <a href="{{ url_for('producto_detalle', producto_id=producto.id) }}" class="btn btn-outline-primary btn-sm">Ver</a>
+          <a href="{{ url_for('agregar_carrito', producto_id=producto.id) }}" class="btn btn-success btn-sm">Agregar</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted w-100">No hay productos para mostrar.</p>
+    {% endif %}
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('productos') }}" class="btn btn-primary">Ver toda la tienda</a>
+  </div>
+</section>
+
+<!-- BENEFICIOS / TRUST -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="beneficios-grid">
+      <div class="beneficio">
+        <strong>🚚 Envío rápido</strong>
+        <p class="text-muted">Entregas locales en tiempo récord.</p>
+      </div>
+      <div class="beneficio">
+        <strong>💳 Pagos seguros</strong>
+        <p class="text-muted">Aceptamos tarjetas, Yape y efectivo.</p>
+      </div>
+      <div class="beneficio">
+        <strong>🔄 Devoluciones</strong>
+        <p class="text-muted">Política sencilla y rápida.</p>
+      </div>
     </div>
+  </div>
 </section>
 {% endblock %}
