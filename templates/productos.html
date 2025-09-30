@@ -1,10 +1,22 @@
 {% extends "base.html" %}
+
 {% block title %}Productos{% endblock %}
+
 {% block content %}
-<h2>Lista de Productos</h2>
-<ul>
+<h2>Productos en {{ categoria.nombre }}</h2>
+<div class="grid">
     {% for p in productos %}
-        <li>{{ p[1] }} - S/ {{ p[2] }}</li>
+    <div class="card">
+        {% if p.ruta_imagen %}
+            <img src="{{ url_for('static', filename=p.ruta_imagen) }}" alt="{{ p.nombre }}">
+        {% else %}
+            <img src="{{ url_for('static', filename='placeholder.png') }}" alt="Sin imagen">
+        {% endif %}
+        <h3>{{ p.nombre }}</h3>
+        <p>{{ p.descripcion }}</p>
+        <p><strong>S/ {{ "%.2f"|format(p.precio) }}</strong></p>
+        <a href="{{ url_for('agregar_carrito', id_producto=p.id) }}" class="btn">Agregar al carrito</a>
+    </div>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}
